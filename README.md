@@ -129,5 +129,5 @@ cd frontend npm start
 - **Daily Spending**: Monitor your 30-day spending trend
 
 
-``` **Happy Expense Tracking!
+## Happy Expense Tracking!
   
