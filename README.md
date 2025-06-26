@@ -80,5 +80,54 @@ Create a `.env` file in the `backend` directory:
 # MongoDB Connection (Choose one) MONGO_URI=mongodb+srv://your-username:your-password@your-cluster.mongodb.net/expense-tracker?retryWrites=true&w=majority
 # OR for local MongoDB
 # MONGO_URI=mongodb://localhost:27017/expense-tracker
-# Server Configuration PORT=5000 NODE_ENV=development
+# Server Configuration PORT=5001 NODE_ENV=development
 ```
+## 🚀 Running the Application 
+
+### Option 1: Run Both Servers Simultaneously 
+#### Terminal 1 - Backend Server 
+```bash
+cd backend npm run dev
+```
+The backend will start on `http://localhost:5001` 
+#### Terminal 2 - Frontend Server 
+```
+bash cd frontend npm start
+```
+The frontend will start on `http://localhost:3000` 
+
+### Option 2: 
+Run with Production Scripts 
+#### Backend 
+```bash
+cd backend npm start
+```
+#### Frontend 
+```bash 
+cd frontend npm start
+```
+
+## 📱 How to Use 
+### 1. **Dashboard Overview** 
+- Visit `http://localhost:3000` to see the main dashboard
+- View real-time statistics and charts
+- See recent expenses and spending patterns
+### 2. **Adding Expenses** 
+- Click "Add Expense" button or navigate to `/add` - Fill in the form:
+- **Amount**: Enter the expense amount
+- **Category**: Select from 8 predefined categories
+- **Description**: Add a brief description
+- **Date**: Choose the expense date (defaults to today)
+- Click "Save Expense" to add it to your tracker
+### 3. **Managing Expenses**
+- **View All**: Navigate to `/expenses` to see all transactions
+- **Edit**: Click the edit icon on any expense
+- **Delete**: Click the delete icon and confirm deletion
+### 4. **Analyzing Data** 
+- **Category Breakdown**: See how much you spend in each category
+- **Monthly Trends**: Track your spending patterns over time
+- **Daily Spending**: Monitor your 30-day spending trend
+
+
+``` **Happy Expense Tracking!
+  
