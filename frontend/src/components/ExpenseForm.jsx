@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FloppyDisk, X, CurrencyDollar, Tag, FileText, Calendar, CircleNotch, CheckCircle, WarningCircle } from 'phosphor-react';
-import axios from 'axios';
+import api from '../config/axios';
 
 const categories = [
   'Food',
@@ -31,7 +31,7 @@ const ExpenseForm = () => {
   const fetchExpense = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/expenses/${id}`);
+      const response = await api.get(`/api/expenses/${id}`);
       const expense = response.data;
       setFormData({
         amount: expense.amount.toString(),
@@ -81,10 +81,10 @@ const ExpenseForm = () => {
       };
 
       if (id) {
-        await axios.put(`/api/expenses/${id}`, expenseData);
+        await api.put(`/api/expenses/${id}`, expenseData);
         setSuccess('Expense updated successfully!');
       } else {
-        await axios.post('/api/expenses', expenseData);
+        await api.post('/api/expenses', expenseData);
         setSuccess('Expense added successfully!');
         setFormData({
           amount: '',

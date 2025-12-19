@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChartLine, ChartBar, ChartPie, TrendUp, TrendDown, Calendar, Download, Funnel, MagnifyingGlass } from 'phosphor-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import axios from 'axios';
+import api from '../config/axios';
 
 const COLORS = ['#14532D', '#4ADE80', '#F87171', '#f59e0b', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'];
 
@@ -18,8 +18,8 @@ const Reports = () => {
     try {
       setLoading(true);
       const [expensesResponse, statsResponse] = await Promise.all([
-        axios.get('/api/expenses'),
-        axios.get('/api/expenses/stats')
+        api.get('/api/expenses'),
+        api.get('/api/expenses/stats')
       ]);
       setExpenses(expensesResponse.data);
       setStats(statsResponse.data);

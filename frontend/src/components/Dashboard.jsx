@@ -3,7 +3,7 @@ import {PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip
 } from 'recharts';
 import { Plus, TrendUp, TrendDown, Wallet, Receipt, CurrencyDollar, Calendar, ArrowRight, ChartPie as PieChartIcon, ChartBar, Activity, Clock, CalendarBlank, Funnel, MagnifyingGlass } from 'phosphor-react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../config/axios';
 const COLORS = ['#14532D', '#4ADE80', '#F87171', '#f59e0b', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'];
 
 const Dashboard = () => {
@@ -18,8 +18,8 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const [statsResponse, expensesResponse] = await Promise.all([
-        axios.get('/api/expenses/stats'),
-        axios.get('/api/expenses')
+        api.get('/api/expenses/stats'),
+        api.get('/api/expenses')
       ]);
 
       setStats(statsResponse.data);

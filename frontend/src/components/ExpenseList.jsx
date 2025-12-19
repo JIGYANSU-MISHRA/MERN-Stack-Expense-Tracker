@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, PencilSimple, Trash, Receipt, CircleNotch, WarningCircle, MagnifyingGlass, Funnel, X } from 'phosphor-react';
-import axios from 'axios';
+import api from '../config/axios';
 
 const getCategoryColor = (category) => {
   const colors = {
@@ -32,7 +32,7 @@ const ExpenseList = () => {
   const fetchExpenses = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/expenses');
+      const response = await api.get('/api/expenses');
       setExpenses(response.data);
       setFilteredExpenses(response.data);
     } catch (error) {
@@ -113,7 +113,7 @@ const ExpenseList = () => {
   const handleDelete = async () => {
     try {
       setDeleting(true);
-      await axios.delete(`/api/expenses/${deleteDialog.expense._id}`);
+      await api.delete(`/api/expenses/${deleteDialog.expense._id}`);
       setExpenses(expenses.filter(exp => exp._id !== deleteDialog.expense._id));
       setDeleteDialog({ open: false, expense: null });
     } catch (error) {
