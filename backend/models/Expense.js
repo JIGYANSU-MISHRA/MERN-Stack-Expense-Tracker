@@ -4,8 +4,9 @@ const mongoose = require('mongoose');
 //Define the schema for expenses
 const expenseSchema = new mongoose.Schema({
   user: {
-    type: String,
-    default: 'default-user'
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
   amount: {
     type: Number,

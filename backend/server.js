@@ -49,7 +49,10 @@ app.use(express.json({ limit: '10kb' }));
 
 // Routes Setup
 const expenseRoutes = require('./routes/expenses');
+const authRoutes = require('./routes/auth');
+
 app.use('/api/expenses', expenseRoutes);
+app.use('/api/auth', authRoutes);
 
 // Test route
 app.get('/api/test', (req, res) => {

@@ -1,9 +1,15 @@
 //Import express for routing
 const express = require('express');
+const mongoose = require('mongoose');
 // Create a router instance to handle expense-related routes
 const router = express.Router();
 // Import the Expense model we defined earlier
 const Expense = require('../models/Expense');
+// Import auth middleware
+const auth = require('../middleware/auth');
+
+// Protect all routes
+router.use(auth);
 
 // Here I created the POST ROUTE 
 // Create a new expense entry
@@ -11,7 +17,7 @@ router.post('/', async (req, res) => {
   try {
     const { amount, category, description, date } = req.body;
     const newExpense = new Expense({
-      user: 'default-user', // Temporary user ID since we removed auth
+      user: req.userId,
       amount,
       category,
       description,
@@ -29,7 +35,7 @@ router.post('/', async (req, res) => {
 // To get all expenses sorted by newest first
 router.get('/', async (req, res) => {
   try {
-    const expenses = await Expense.find()
+    const expenses = await Expense.find({ user: req.userId })
       .sort({ date: -1 })
       .lean();
     res.json(expenses);
@@ -44,6 +50,9 @@ router.get('/', async (req, res) => {
 router.get('/stats', async (req, res) => {
   try {
     const stats = await Expense.aggregate([
+      {
+        $match: { user: new mongoose.Types.ObjectId(req.userId) }
+      },
       {
         $facet: {
           total: [
@@ -106,7 +115,7 @@ router.get('/stats', async (req, res) => {
 // To get a single expense by ID
 router.get('/:id', async (req, res) => {
   try {
-    const expense = await Expense.findById(req.params.id);
+    const expense = await Expense.findOne({ _id: req.params.id, user: req.userId });
     if (!expense) {
       return res.status(404).json({ msg: 'Expense not found' });
     }
@@ -123,7 +132,7 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { amount, category, description, date } = req.body;
-    let expense = await Expense.findById(req.params.id);
+    let expense = await Expense.findOne({ _id: req.params.id, user: req.userId });
     if (!expense) {
       return res.status(404).json({ msg: 'Expense not found' });
     }
@@ -143,7 +152,7 @@ router.put('/:id', async (req, res) => {
 //To delete an expense
 router.delete('/:id', async (req, res) => {
   try {
-    const expense = await Expense.findById(req.params.id);
+    const expense = await Expense.findOne({ _id: req.params.id, user: req.userId });
     if (!expense) {
       return res.status(404).json({ msg: 'Expense not found' });
     }
