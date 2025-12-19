@@ -77,6 +77,8 @@ CLIENT_URL=https://your-vercel-app.vercel.app
 - **Output Directory**: `build` (auto-detected)
 - **Install Command**: `npm install` (auto-detected)
 
+**Note:** The project includes a `vercel.json` file that configures API rewrites. If you're using `REACT_APP_API_URL`, the rewrites in `vercel.json` are optional. The `REACT_APP_API_URL` method is recommended for production.
+
 ### 2.3 Add Environment Variables
 
 Click on **"Environment Variables"** and add:
@@ -88,6 +90,8 @@ REACT_APP_API_URL=https://your-render-backend-url.onrender.com
 **Important:**
 - Replace `your-render-backend-url.onrender.com` with your actual Render backend URL from Step 1.4
 - Make sure to include `https://` in the URL
+- **Do NOT** include a trailing slash (e.g., use `https://backend.onrender.com` not `https://backend.onrender.com/`)
+- After setting the variable, you may need to redeploy for changes to take effect
 
 ### 2.4 Deploy
 
@@ -163,6 +167,221 @@ REACT_APP_API_URL=https://your-render-backend-url.onrender.com
   - Check build logs in Vercel dashboard
   - Ensure `package.json` has correct build script
   - Verify all dependencies are listed in `package.json`
+
+---
+
+## 🐛 Debugging Guide
+
+This application includes comprehensive debugging logs to help you identify and fix issues. All debugging information is logged to the browser console.
+
+### How to Access Debug Logs
+
+1. **Open Browser Developer Tools:**
+   - **Chrome/Edge**: Press `F12` or `Ctrl+Shift+I` (Windows) / `Cmd+Option+I` (Mac)
+   - **Firefox**: Press `F12` or `Ctrl+Shift+I` (Windows) / `Cmd+Option+I` (Mac)
+   - **Safari**: Press `Cmd+Option+I` (Mac)
+
+2. **Go to Console Tab:**
+   - Click on the "Console" tab in Developer Tools
+   - All debug logs will appear here
+
+### Understanding Debug Logs
+
+The application uses emoji-prefixed logs for easy identification:
+
+- 🔵 **Blue Circle**: Request started
+- 📤 **Outbox**: Request payload being sent
+- ✅ **Checkmark**: Successful response
+- ❌ **Red X**: Error occurred
+- ⚠️ **Warning**: Warning message
+- 🔐 **Lock**: Request with authentication token
+- 📥 **Inbox**: Server response received
+- 📡 **Satellite**: Network request error
+- 💾 **Floppy Disk**: Data saved to localStorage
+- 🔒 **Locked**: 401 Unauthorized error
+
+### Common Debug Scenarios
+
+#### 1. Authentication Failed Error
+
+**What to look for in console:**
+
+```
+[AuthContext] 🔵 Signup request started: {...}
+[axios] 📤 Request without token: {...}
+[axios] ❌ Response error: {...}
+[AuthContext] ❌ Signup error details: {...}
+[AuthPage] ❌ Authentication error: {...}
+```
+
+**Check these details:**
+
+1. **API Base URL:**
+   - Look for `apiBaseURL` in the logs
+   - Should show your Render backend URL in production
+   - If it shows `'using proxy'` in production, `REACT_APP_API_URL` is not set
+
+2. **Full URL:**
+   - Check `fullURL` in error logs
+   - Should be: `https://your-backend.onrender.com/api/auth/signup`
+   - If incorrect, verify `REACT_APP_API_URL` in Vercel
+
+3. **Response Status:**
+   - `status: 400` → Invalid input (check email/password format)
+   - `status: 401` → Invalid credentials
+   - `status: 409` → User already exists
+   - `status: 422` → Validation error
+   - `status: 500` → Server error
+   - `No response` → Network/CORS issue
+
+4. **Network Errors:**
+   - `ERR_NETWORK` → Cannot reach server
+   - `ECONNABORTED` → Request timeout
+   - `No response received` → Server down or CORS issue
+
+#### 2. CORS Errors
+
+**Symptoms:**
+- Console shows: `Access to XMLHttpRequest has been blocked by CORS policy`
+- Error logs show: `No response received`
+
+**Debug steps:**
+
+1. Check `CLIENT_URL` in Render:
+   ```
+   CLIENT_URL=https://your-vercel-app.vercel.app
+   ```
+   - Must match your Vercel URL exactly (including `https://`)
+   - No trailing slash
+
+2. Check backend logs in Render:
+   - Go to Render Dashboard → Your Service → Logs
+   - Look for CORS-related errors
+
+3. Verify frontend URL:
+   - Check what URL you're accessing
+   - Must match `CLIENT_URL` in backend
+
+#### 3. Network Connection Issues
+
+**Symptoms:**
+- `ERR_NETWORK` in console
+- `Request was made but no response received`
+
+**Debug steps:**
+
+1. **Check if backend is running:**
+   - Visit: `https://your-backend.onrender.com/api/test`
+   - Should return: `{"message":"Backend is running!"}`
+   - If not, backend might be sleeping (Render free tier)
+
+2. **Check backend URL:**
+   - In console, look for `fullURL` in error logs
+   - Verify it matches your Render backend URL
+
+3. **Check environment variable:**
+   - In Vercel: Settings → Environment Variables
+   - Verify `REACT_APP_API_URL` is set correctly
+   - Must include `https://` prefix
+   - No trailing slash
+
+4. **Wait for backend to wake up:**
+   - Render free tier services sleep after 15 minutes
+   - First request may take 30-60 seconds
+   - Subsequent requests are faster
+
+#### 4. Token Issues
+
+**Symptoms:**
+- `No token in response!` in console
+- `No user data in response!` in console
+
+**Debug steps:**
+
+1. Check response data:
+   - Look for `responseData` in console logs
+   - Should contain `token` and `user` fields
+
+2. Check backend authentication route:
+   - Verify backend is returning correct format:
+     ```json
+     {
+       "token": "jwt-token-here",
+       "user": { "id": "...", "email": "..." }
+     }
+     ```
+
+#### 5. Request/Response Tracking
+
+**All requests are logged with:**
+- Request ID (unique identifier)
+- Timestamp
+- Method (GET, POST, etc.)
+- Full URL
+- Duration (response time)
+
+**Example log:**
+```
+[axios] 📤 Request without token: {
+  method: "POST",
+  url: "/api/auth/signup",
+  baseURL: "https://your-backend.onrender.com",
+  fullURL: "https://your-backend.onrender.com/api/auth/signup",
+  requestId: "req-1234567890-abc123"
+}
+
+[axios] ✅ Response received: {
+  status: 200,
+  duration: "245ms",
+  requestId: "req-1234567890-abc123"
+}
+```
+
+### Debugging Checklist
+
+When troubleshooting authentication errors, check:
+
+- [ ] Browser console is open (F12)
+- [ ] Console shows debug logs with emoji prefixes
+- [ ] `REACT_APP_API_URL` is set in Vercel environment variables
+- [ ] Backend URL is correct (no trailing slash, includes `https://`)
+- [ ] Backend is accessible: `https://your-backend.onrender.com/api/test`
+- [ ] `CLIENT_URL` in Render matches your Vercel URL exactly
+- [ ] MongoDB connection is working (check Render logs)
+- [ ] No CORS errors in browser console
+- [ ] Network tab shows the request (check status code)
+
+### Quick Debug Commands
+
+**Test backend directly:**
+```bash
+curl https://your-backend.onrender.com/api/test
+```
+
+**Test authentication endpoint:**
+```bash
+curl -X POST https://your-backend.onrender.com/api/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"test123","confirmPassword":"test123"}'
+```
+
+**Check environment variables:**
+- In browser console, type:
+  ```javascript
+  console.log('API URL:', process.env.REACT_APP_API_URL);
+  ```
+  (Note: This only works in development. In production, check Vercel settings)
+
+### Getting Help
+
+When asking for help, provide:
+
+1. **Console logs**: Copy all logs from browser console (especially error logs)
+2. **Network tab**: Screenshot of failed request in Network tab
+3. **Environment variables**: (Don't share sensitive values, just confirm they're set)
+4. **Backend URL**: Your Render backend URL
+5. **Frontend URL**: Your Vercel frontend URL
+6. **Error message**: The exact error message shown to user
 
 ---
 

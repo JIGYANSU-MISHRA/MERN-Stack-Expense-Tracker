@@ -36,6 +36,13 @@ const AuthPage = () => {
     const password = form.password;
     const confirmPassword = form.confirmPassword;
 
+    console.log('[AuthPage] Form submission started', {
+      mode,
+      email: email ? `${email.substring(0, 3)}***` : 'empty',
+      hasPassword: !!password,
+      hasConfirmPassword: !!confirmPassword,
+    });
+
     if (!email || !password) {
       setError('Please fill in email and password.');
       return;
@@ -54,14 +61,99 @@ const AuthPage = () => {
 
     try {
       setLoading(true);
+      console.log(`[AuthPage] Calling ${mode} API...`);
+      
       if (mode === 'signup') {
         await signup({ email, password, confirmPassword });
+        console.log('[AuthPage] Signup successful');
       } else {
         await signin({ email, password });
+        console.log('[AuthPage] Signin successful');
       }
       navigate(redirectTo, { replace: true });
     } catch (err) {
-      const msg = err?.response?.data?.message || 'Authentication failed.';
+      const errorId = `auth-error-${Date.now()}`;
+      const errorDetails = {
+        errorId,
+        mode,
+        message: err?.message,
+        name: err?.name,
+        code: err?.code,
+        response: err?.response ? {
+          status: err.response.status,
+          statusText: err.response.statusText,
+          data: err.response.data,
+          headers: err.response.headers,
+        } : 'No response',
+        request: err?.request ? {
+          url: err.config?.url,
+          method: err.config?.method,
+          baseURL: err.config?.baseURL,
+          fullURL: err.config?.baseURL ? `${err.config.baseURL}${err.config.url}` : err.config?.url,
+        } : 'No request',
+        networkError: !err?.response && !err?.request,
+        timestamp: new Date().toISOString(),
+      };
+      
+      console.error('[AuthPage] ❌ Authentication error:', errorDetails);
+      
+      // Detailed error logging for debugging
+      if (err?.response) {
+        console.error('[AuthPage] 📥 Server Response Error:', {
+          status: err.response.status,
+          statusText: err.response.statusText,
+          errorMessage: err.response.data?.message || 'No error message',
+          fullErrorData: err.response.data,
+          errorId,
+        });
+      } else if (err?.request) {
+        console.error('[AuthPage] 📡 Network Request Error:', {
+          message: 'Request was sent but no response received',
+          url: err.config?.url,
+          baseURL: err.config?.baseURL,
+          fullURL: err.config?.baseURL ? `${err.config.baseURL}${err.config.url}` : err.config?.url,
+          possibleCauses: [
+            'Server is down or unreachable',
+            'CORS issue preventing response',
+            'Network timeout',
+            'Backend URL is incorrect',
+          ],
+          errorId,
+        });
+      } else {
+        console.error('[AuthPage] ⚠️ Request Setup Error:', {
+          message: err?.message || 'Unknown error',
+          code: err?.code,
+          errorId,
+        });
+      }
+      
+      // User-friendly error messages
+      let msg = 'Authentication failed.';
+      if (err?.response?.data?.message) {
+        msg = err.response.data.message;
+        console.log('[AuthPage] Using server error message:', msg);
+      } else if (err?.response?.status === 400) {
+        msg = 'Invalid email or password. Please check your credentials.';
+      } else if (err?.response?.status === 401) {
+        msg = 'Invalid credentials. Please check your email and password.';
+      } else if (err?.response?.status === 409) {
+        msg = 'An account with this email already exists. Please sign in instead.';
+      } else if (err?.response?.status === 422) {
+        msg = err.response.data?.message || 'Validation error. Please check your input.';
+      } else if (err?.response?.status === 500) {
+        msg = 'Server error: Please try again later.';
+      } else if (err?.code === 'ERR_NETWORK' || err?.message?.includes('Network Error')) {
+        msg = 'Network error: Could not connect to server. Please check your connection and try again.';
+      } else if (err?.code === 'ECONNABORTED') {
+        msg = 'Request timeout: The server took too long to respond. Please try again.';
+      } else if (!err?.response && !err?.request) {
+        msg = 'Connection error: Unable to reach the server. Check if the backend is running.';
+      } else if (err?.message) {
+        msg = `Error: ${err.message}`;
+      }
+      
+      console.log('[AuthPage] Setting error message for user:', msg);
       setError(msg);
     } finally {
       setLoading(false);
